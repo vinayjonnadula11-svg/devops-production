@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -9,15 +10,42 @@ pipeline {
             }
         }
 
-       stage('Docker Check') {
-    steps {
-        powershell '''
-            & "C:\\Users\\jonna\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" version
+        stage('Verify Files') {
+            steps {
+                powershell '''
+                    if (!(Test-Path "app.js")) {
+                        throw "app.js not found"
+                    }
 
-            if ($LASTEXITCODE -ne 0) {
-                throw "Docker is not accessible from Jenkins"
+                    if (!(Test-Path "dockerfile")) {
+                        throw "dockerfile not found"
+                    }
+
+                    if (!(Test-Path "myapp/Chart.yaml")) {
+                        throw "Helm Chart.yaml not found"
+                    }
+
+                    Write-Host "All required files found."
+                '''
             }
-        '''
+        }
+
+        stage('Docker Check') {
+            steps {
+                powershell '''
+                    $docker = "C:\\Users\\jonna\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe"
+
+                    if (!(Test-Path $docker)) {
+                        throw "Docker executable not found"
+                    }
+
+                    & $docker version
+
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Docker Engine is not accessible from Jenkins"
+                    }
+                '''
+            }
+        }
     }
 }
-
