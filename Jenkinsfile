@@ -92,7 +92,7 @@ stage('Docker Hub Push') {
 
                 & $docker push "vinay0650/devops-production-app:1.0.0"
 
-                if ($LASTEXITCODE -ne 0) {
+                          if ($LASTEXITCODE -ne 0) {
                     throw "Docker Hub push failed."
                 }
             '''
