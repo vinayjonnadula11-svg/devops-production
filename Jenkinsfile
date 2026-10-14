@@ -62,40 +62,42 @@ pipeline {
             }
         }
 
-     
-stage('Docker Hub Push') {
-    steps {
-        withCredentials([
-            usernamePassword(
-                credentialsId: 'dockerhub-creds',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_TOKEN'
-            )
-        ]) {
-            powershell '''
-                $ErrorActionPreference = "Stop"
-                $docker = "C:\\Users\\jonna\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe"
+        stage('Docker Hub Push') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_TOKEN'
+                    )
+                ]) {
+                    powershell '''
+                        $ErrorActionPreference = "Stop"
+                        $docker = "C:\\Users\\jonna\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe"
 
-                if ([string]::IsNullOrWhiteSpace($env:DOCKER_USER)) {
-                    throw "Docker Hub username is empty"
+                        if ([string]::IsNullOrWhiteSpace($env:DOCKER_USER)) {
+                            throw "Docker Hub username is empty"
+                        }
+
+                        if ([string]::IsNullOrWhiteSpace($env:DOCKER_TOKEN)) {
+                            throw "Docker Hub token is empty"
+                        }
+
+                        $token = $env:DOCKER_TOKEN.Trim()
+                        $token | & $docker login --username $env:DOCKER_USER --password-stdin
+
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Docker Hub login failed. Check the Jenkins credential."
+                        }
+
+                        & $docker push "vinay0650/devops-production-app:1.0.0"
+
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Docker Hub push failed."
+                        }
+                    '''
                 }
-
-                if ([string]::IsNullOrWhiteSpace($env:DOCKER_TOKEN)) {
-                    throw "Docker Hub token is empty"
-                }
-
-                $env:DOCKER_TOKEN.Trim() | & $docker login --username $env:DOCKER_USER --password-stdin
-
-                if ($LASTEXITCODE -ne 0) {
-                    throw "Docker Hub login failed. Check the Jenkins credential."
-                }
-
-                & $docker push "vinay0650/devops-production-app:1.0.0"
-
-                          if ($LASTEXITCODE -ne 0) {
-                    throw "Docker Hub push failed."
-                }
-            '''
+            }
         }
     }
 }
