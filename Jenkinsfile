@@ -21,16 +21,3 @@ pipeline {
     }
 }
 
-        stage('Docker Check') {
-            steps {
-                powershell '''
-                    docker version
-
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "Docker is not accessible from Jenkins"
-                    }
-                '''
-            }
-        }
-    }
-}
