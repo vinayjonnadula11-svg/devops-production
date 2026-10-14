@@ -9,25 +9,17 @@ pipeline {
             }
         }
 
-        stage('Verify Files') {
-            steps {
-                powershell '''
-                    if (!(Test-Path "app.js")) {
-                        throw "app.js not found"
-                    }
+       stage('Docker Check') {
+    steps {
+        powershell '''
+            & "C:\\Users\\jonna\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe" version
 
-                    if (!(Test-Path "dockerfile")) {
-                        throw "dockerfile not found"
-                    }
-
-                    if (!(Test-Path "myapp/Chart.yaml")) {
-                        throw "Helm Chart.yaml not found"
-                    }
-
-                    Write-Host "All required files found."
-                '''
+            if ($LASTEXITCODE -ne 0) {
+                throw "Docker is not accessible from Jenkins"
             }
-        }
+        '''
+    }
+}
 
         stage('Docker Check') {
             steps {
