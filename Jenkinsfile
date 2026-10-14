@@ -47,5 +47,45 @@ pipeline {
                 '''
             }
         }
+
+        stage('Docker Build') {
+            steps {
+                powershell '''
+                    $docker = "C:\\Users\\jonna\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe"
+
+                    & $docker build -t vinay0650/devops-production-app:1.0.0 -f dockerfile .
+
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Docker image build failed"
+                    }
+                '''
+            }
+        }
+
+        stage('Docker Hub Push') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_TOKEN'
+                )]) {
+                    powershell '''
+                        $docker = "C:\\Users\\jonna\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe"
+
+                        $env:DOCKER_TOKEN | & $docker login --username $env:DOCKER_USER --password-stdin
+
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Docker Hub login failed"
+                        }
+
+                        & $docker push vinay0650/devops-production-app:1.0.0
+
+                        if ($LASTEXITCODE -ne 0) {
+                            throw "Docker Hub push failed"
+                        }
+                    '''
+                }
+            }
+        }
     }
 }
